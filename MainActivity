@@ -1,6 +1,11 @@
 package com.example.monster.app;
 
 //Monster
+
+//The final plan is to create a personal assistant app that will also track fitness
+//I need to make use of a much better algorithm to count steps
+//Considering making this app a type of virtual pet
+
 import android.app.Activity;
 import android.hardware.Camera;
 import android.support.v7.app.ActionBarActivity;
