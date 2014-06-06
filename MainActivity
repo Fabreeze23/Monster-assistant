@@ -1,0 +1,157 @@
+package com.example.monster.app;
+
+//Monster
+import android.app.Activity;
+import android.hardware.Camera;
+import android.support.v7.app.ActionBarActivity;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.hardware.Camera.Parameters;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.ToggleButton;
+import android.widget.ImageButton ;
+
+/*Pedometer */
+import java.util.ArrayList;
+
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.util.Log;
+import android.widget.Button ;
+import android.widget.SeekBar ;
+import android.widget.SeekBar.OnSeekBarChangeListener ;
+
+import android.content.Context ;
+public class MainActivity extends Activity {
+
+    //Display Fields For Accelerometer
+    private TextView textViewX ;
+    private TextView textViewY ;
+    private TextView textViewZ ;
+
+    //Display Fields For Sensitivity
+    private TextView textSensitive ;
+
+    //Display For Steps
+    private TextView textViewSteps ;
+
+    //Reset Button
+    private Button buttonReset ;
+
+    //Sensor Manager
+    private SensorManager sensorManager ;
+    private float acceleration ;
+
+    //Values to Calculate Number of Steps
+    private float previousY ;
+    private float currentY ;
+    private int numSteps ;
+
+    //SeekBar Fields
+    private SeekBar seekBar ;
+    private int threshold ; //Point at which we want to trigger a 'step'
+
+    protected void onCreate(Bundle savedInstanceState)  {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        final Camera cam;
+        final Parameters parameters;
+        final ToggleButton lightSwitch = (ToggleButton) findViewById(R.id.toggleButton); //XML bridge finds Lightswitch compound button
+
+        cam = Camera.open(); //Starts instance of camera... just used to pass down parameters to Parameters class
+        parameters = cam.getParameters(); //Gets current parameters for camera
+
+        //Attach objects to XML View
+        textViewX = (TextView)findViewById(R.id.textViewX) ;
+        textViewY = (TextView)findViewById(R.id.textViewY) ;
+        textViewZ = (TextView)findViewById(R.id.textViewZ) ;
+
+        //Attach Step and Sensitive View Objects to XML
+        textViewSteps = (TextView)findViewById(R.id.textSteps) ;
+
+
+        //Attach reset button to XML
+        buttonReset = (Button)findViewById(R.id.buttonReset) ;
+
+        //Attach the seekbar to XML
+
+
+        // Set the Values on the seekBar, threshold, and threshold display
+        ;
+        threshold = 10 ;
+
+
+        //Initialize Values
+        previousY = 0;
+        currentY = 0;
+        numSteps = 0 ;
+
+        //initialize acceleration values
+        acceleration = 0.00f ;
+
+        //Enable the listener - We will write this later in the class
+        enableAccelerometerListening() ;
+
+        lightSwitch.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { //Listens for Clicks on lightSwitch
+                if (lightSwitch.isChecked()) { // If checked, Flash Mode is Torch
+                    parameters.setFlashMode(Parameters.FLASH_MODE_TORCH);
+                    cam.setParameters(parameters); //Passes down new parameters to cam
+                }
+                if (!lightSwitch.isChecked()) //If lightSwitch is not checked...
+                {
+                    parameters.setFlashMode(Parameters.FLASH_MODE_OFF);// Flash Mode is off
+                    cam.setParameters(parameters); //New parameters passed on to cam
+                }
+
+            }
+        });
+
+        }
+        private void enableAccelerometerListening() {
+            sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE) ;
+            SensorEventListener sensorEventListener = new SensorEventListener() {
+
+                @Override
+                public void onSensorChanged(SensorEvent event) {
+                    //Gather the Values From the Accelerometer
+                    float x = event.values[0];
+                    float y = event.values[1];
+                    float z = event.values[2];
+
+                    //Fetch the Current Y
+                    currentY = y;
+
+                    //Measure if a step is taken
+                    if (Math.abs(currentY - previousY) > threshold) {
+                        numSteps++ ;
+                        textViewSteps.setText(String.valueOf(numSteps));
+                    }
+                    textViewX.setText(String.valueOf(x));
+                    textViewY.setText(String.valueOf(y));
+                    textViewZ.setText(String.valueOf(z));
+
+                    //Store the Previous Y
+                    previousY = y;
+                }
+
+                @Override
+                public void onAccuracyChanged(Sensor sensor, int i) {
+
+                }
+            };
+            sensorManager.registerListener(sensorEventListener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) , SensorManager.SENSOR_DELAY_NORMAL) ;
+
+
+        }
+
+
+    }
+
